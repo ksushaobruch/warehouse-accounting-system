@@ -1,0 +1,10 @@
+Уровни системы:
+1. Клиентский уровень (React веб-интерфейс)
+2. Сервер приложений (API Gateway, микросервисы)
+3. Уровень данных (PostgreSQL, Redis, S3)
+
+Компоненты:
+- Auth Service (аутентификация)
+- Stock Service (учёт остатков)
+- WriteOff Service (списание МЦ)
+- Report Service (отчёты)
