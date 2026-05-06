@@ -1,0 +1,373 @@
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+struct MC {
+    int id;
+    string name;
+    int quantity;
+    double price;
+};
+
+struct Request {
+    int id;
+    string date;
+    string reason;
+    int mcId;
+    int quantity;
+    string status;
+};
+
+vector<MC> stock;
+vector<Request> requests;
+int nextId = 1;
+string currentUser = "";
+string currentRole = "";
+
+bool login() {
+    string login, password;
+    cout << "\nСИСТЕМА УЧЕТА И СПИСАНИЯ МЦ" << endl;
+    cout << "Логин: ";
+    cin >> login;
+    cout << "Пароль: ";
+    cin >> password;
+    
+    if (login == "klad" && password == "1") {
+        currentUser = login;
+        currentRole = "kladovshik";
+        return true;
+    } else if (login == "buh" && password == "2") {
+        currentUser = login;
+        currentRole = "buhgalter";
+        return true;
+    } else if (login == "kom" && password == "3") {
+        currentUser = login;
+        currentRole = "komissiya";
+        return true;
+    } else if (login == "ruk" && password == "4") {
+        currentUser = login;
+        currentRole = "rukovoditel";
+        return true;
+    } else if (login == "admin" && password == "5") {
+        currentUser = login;
+        currentRole = "admin";
+        return true;
+    } else {
+        cout << "Ошибка. Неверный логин или пароль" << endl;
+        return false;
+    }
+}
+
+void kladovshikMenu() {
+    int choice;
+    while (true) {
+        cout << "\nКЛАДОВЩИК" << endl;
+        cout << "1. Принять МЦ на склад" << endl;
+        cout << "2. Создать заявку на списание" << endl;
+        cout << "3. Сформировать акт списания" << endl;
+        cout << "4. Просмотреть отчёты" << endl;
+        cout << "5. Выйти из системы" << endl;
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        
+        if (choice == 1) {
+            MC item;
+            item.id = nextId++;
+            cout << "Наименование МЦ: ";
+            cin >> item.name;
+            cout << "Количество: ";
+            cin >> item.quantity;
+            cout << "Цена за единицу: ";
+            cin >> item.price;
+            stock.push_back(item);
+            cout << "МЦ оприходовано. ID: " << item.id << endl;
+        }
+        else if (choice == 2) {
+            Request req;
+            req.id = nextId++;
+            cout << "Дата (ДД.ММ.ГГГГ): ";
+            cin >> req.date;
+            cout << "Причина (брак/порча/износ/срок): ";
+            cin >> req.reason;
+            cout << "ID материальной ценности: ";
+            cin >> req.mcId;
+            cout << "Количество к списанию: ";
+            cin >> req.quantity;
+            req.status = "Черновик";
+            requests.push_back(req);
+            cout << "Заявка создана. Номер: " << req.id << endl;
+        }
+        else if (choice == 3) {
+            cout << "\nСписок заявок" << endl;
+            for (const auto& req : requests) {
+                cout << "ID: " << req.id << " | Дата: " << req.date 
+                     << " | Причина: " << req.reason << " | Статус: " << req.status << endl;
+            }
+            int reqId;
+            cout << "Введите ID заявки для формирования акта: ";
+            cin >> reqId;
+            for (auto& req : requests) {
+                if (req.id == reqId) {
+                    req.status = "На проверке";
+                    cout << "Акт списания N" << reqId << " сформирован и отправлен на проверку" << endl;
+                    break;
+                }
+            }
+        }
+        else if (choice == 4) {
+            cout << "\nОтчёт по остаткам" << endl;
+            for (const auto& item : stock) {
+                cout << "ID: " << item.id << " | " << item.name 
+                     << " | Количество: " << item.quantity 
+                     << " | Стоимость: " << item.price * item.quantity << " руб." << endl;
+            }
+        }
+        else if (choice == 5) {
+            cout << "Выход из системы" << endl;
+            return;
+        }
+        else {
+            cout << "Неверный выбор" << endl;
+        }
+    }
+}
+
+void buhgalterMenu() {
+    int choice;
+    while (true) {
+        cout << "\nБУХГАЛТЕР" << endl;
+        cout << "1. Проверить заявки на списание" << endl;
+        cout << "2. Сформировать проводки" << endl;
+        cout << "3. Просмотреть отчёты" << endl;
+        cout << "4. Выйти из системы" << endl;
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        
+        if (choice == 1) {
+            cout << "\nЗаявки на проверке" << endl;
+            for (auto& req : requests) {
+                if (req.status == "На проверке") {
+                    cout << "ID: " << req.id << " | Дата: " << req.date 
+                         << " | Причина: " << req.reason << " | Кол-во: " << req.quantity << endl;
+                    cout << "Одобрить? (да/нет): ";
+                    string approve;
+                    cin >> approve;
+                    if (approve == "да") {
+                        req.status = "На утверждении";
+                        cout << "Заявка одобрена, отправлена руководителю" << endl;
+                    } else {
+                        req.status = "Отказано";
+                        cout << "Заявка отклонена" << endl;
+                    }
+                }
+            }
+        }
+        else if (choice == 2) {
+            cout << "\nПроводки сформированы: Дт 91.02 - Кт 10/41" << endl;
+        }
+        else if (choice == 3) {
+            cout << "\nОтчёт по списаниям" << endl;
+            for (const auto& req : requests) {
+                if (req.status == "Утверждён") {
+                    cout << "Акт N" << req.id << endl;
+                }
+            }
+        }
+        else if (choice == 4) {
+            cout << "Выход из системы" << endl;
+            return;
+        }
+    }
+}
+
+void komissiyaMenu() {
+    int choice;
+    while (true) {
+        cout << "\nКОМИССИЯ" << endl;
+        cout << "1. Провести осмотр МЦ" << endl;
+        cout << "2. Загрузить фото дефектов" << endl;
+        cout << "3. Выйти из системы" << endl;
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        
+        if (choice == 1) {
+            cout << "\nВведите ID заявки для осмотра: ";
+            int reqId;
+            cin >> reqId;
+            cout << "Результат осмотра (брак подтвержден/не подтвержден): ";
+            string result;
+            cin >> result;
+            cout << "Описание дефектов: ";
+            string defect;
+            cin.ignore();
+            getline(cin, defect);
+            cout << "Акт осмотра сохранен" << endl;
+        }
+        else if (choice == 2) {
+            cout << "\nЗагружены фотографии дефектов" << endl;
+        }
+        else if (choice == 3) {
+            cout << "Выход из системы" << endl;
+            return;
+        }
+    }
+}
+
+void rukovoditelMenu() {
+    int choice;
+    while (true) {
+        cout << "\nРУКОВОДИТЕЛЬ" << endl;
+        cout << "1. Утвердить акты списания" << endl;
+        cout << "2. Просмотреть отчёты" << endl;
+        cout << "3. Выйти из системы" << endl;
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        
+        if (choice == 1) {
+            cout << "\nЗаявки на утверждении" << endl;
+            for (auto& req : requests) {
+                if (req.status == "На утверждении") {
+                    cout << "ID: " << req.id << " | Дата: " << req.date 
+                         << " | Причина: " << req.reason << endl;
+                    cout << "Утвердить? (да/нет): ";
+                    string approve;
+                    cin >> approve;
+                    if (approve == "да") {
+                        req.status = "Утверждён";
+                        cout << "Акт утверждён. Уменьшаем остатки" << endl;
+                        for (auto& item : stock) {
+                            if (item.id == req.mcId) {
+                                item.quantity -= req.quantity;
+                                break;
+                            }
+                        }
+                        cout << "Проводки сформированы: Дт 91.02 - Кт 10/41" << endl;
+                    } else {
+                        req.status = "Отказано";
+                        cout << "Акт отклонён" << endl;
+                    }
+                }
+            }
+        }
+        else if (choice == 2) {
+            cout << "\nОтчёт по утверждённым актам" << endl;
+            for (const auto& req : requests) {
+                if (req.status == "Утверждён") {
+                    cout << "Акт N" << req.id << " | Дата: " << req.date << endl;
+                }
+            }
+        }
+        else if (choice == 3) {
+            cout << "Выход из системы" << endl;
+            return;
+        }
+    }
+}
+
+void adminMenu() {
+    int choice;
+    while (true) {
+        cout << "\nАДМИНИСТРАТОР" << endl;
+        cout << "1. Управление пользователями" << endl;
+        cout << "2. Управление справочником МЦ" << endl;
+        cout << "3. Просмотр логов" << endl;
+        cout << "4. Экспорт базы данных" << endl;
+        cout << "5. Выйти из системы" << endl;
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        
+        if (choice == 1) {
+            cout << "\nСписок пользователей" << endl;
+            cout << "klad | Кладовщик | активен" << endl;
+            cout << "buh | Бухгалтер | активен" << endl;
+            cout << "kom | Комиссия | активен" << endl;
+            cout << "ruk | Руководитель | активен" << endl;
+            cout << "admin | Администратор | активен" << endl;
+            cout << "\n1. Добавить пользователя" << endl;
+            cout << "2. Заблокировать пользователя" << endl;
+            int userChoice;
+            cin >> userChoice;
+            if (userChoice == 1) {
+                cout << "Логин нового пользователя: ";
+                string newLogin;
+                cin >> newLogin;
+                cout << "Пользователь " << newLogin << " добавлен" << endl;
+            }
+        }
+        else if (choice == 2) {
+            cout << "\nСправочник МЦ" << endl;
+            for (const auto& item : stock) {
+                cout << "ID: " << item.id << " | " << item.name << " | Цена: " << item.price << endl;
+            }
+            cout << "\n1. Добавить новый МЦ" << endl;
+            cout << "2. Редактировать цену" << endl;
+            int mcChoice;
+            cin >> mcChoice;
+            if (mcChoice == 1) {
+                MC newItem;
+                newItem.id = nextId++;
+                cout << "Наименование: ";
+                cin >> newItem.name;
+                cout << "Цена: ";
+                cin >> newItem.price;
+                stock.push_back(newItem);
+                cout << "МЦ добавлено" << endl;
+            }
+        }
+        else if (choice == 3) {
+            cout << "\nЛоги системы" << endl;
+            cout << "01.06.2025 10:00 - Кладовщик: оприходовано МЦ" << endl;
+            cout << "02.06.2025 11:30 - Бухгалтер: проверена заявка" << endl;
+            cout << "03.06.2025 14:15 - Руководитель: утверждён акт" << endl;
+        }
+        else if (choice == 4) {
+            cout << "\nБаза данных экспортирована в CSV" << endl;
+        }
+        else if (choice == 5) {
+            cout << "Выход из системы" << endl;
+            return;
+        }
+    }
+}
+
+int main() {
+    MC starter;
+    starter.id = 1;
+    starter.name = "Бумага А4";
+    starter.quantity = 100;
+    starter.price = 250;
+    stock.push_back(starter);
+    
+    while (true) {
+        if (!login()) {
+            cout << "Повторить попытку? (да/нет): ";
+            string again;
+            cin >> again;
+            if (again != "да") break;
+            continue;
+        }
+        
+        cout << "\nДобро пожаловать, " << currentUser << "! Роль: " << currentRole << endl;
+        
+        if (currentRole == "kladovshik") {
+            kladovshikMenu();
+        } else if (currentRole == "buhgalter") {
+            buhgalterMenu();
+        } else if (currentRole == "komissiya") {
+            komissiyaMenu();
+        } else if (currentRole == "rukovoditel") {
+            rukovoditelMenu();
+        } else if (currentRole == "admin") {
+            adminMenu();
+        }
+        
+        cout << "\nВыйти из приложения? (да/нет): ";
+        string exitApp;
+        cin >> exitApp;
+        if (exitApp == "да") break;
+    }
+    
+    cout << "Программа завершена" << endl;
+    return 0;
+}
